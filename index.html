@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Solar Inteligente - MF</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #eef2f3; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
+        }
+        .card { 
+            background: white; 
+            padding: 2rem; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            max-width: 480px; 
+            width: 100%; 
+        }
+        .logo-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+        .logo-img {
+            max-width: 100px;
+            height: auto;
+        }
+        h2 { color: #2c3e50; text-align: center; margin-bottom: 20px; font-size: 1.5rem; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+        }
+        
+        /* Estilo especial para el campo de paneles sugeridos */
+        .panel-input-section {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px dashed #2a5298;
+            margin-bottom: 15px;
+        }
+
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background: linear-gradient(135deg, #1e3c72, #2a5298); 
+            border: none; 
+            color: white; 
+            font-weight: bold; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+        button:hover { opacity: 0.9; }
+        
+        #resultado { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border-radius: 8px; 
+            display: none; 
+            background: #f4f9f4; 
+            border-left: 5px solid #27ae60; 
+        }
+        .destaque { color: #27ae60; font-weight: bold; font-size: 1.2rem; }
+        .info-text { font-size: 0.75rem; color: #777; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo-container">
+        <img src="logo.jpg" alt="Logo MF" class="logo-img">
+    </div>
+
+    <h2>☀️ Calculadora Solar Interactiva ☀️</h2>
+    
+    <div class="input-grid">
+        <div>
+            <label>Consumo (kWh/mes)</label>
+            <input type="number" id="consumo" value="400" oninput="sugerirPaneles()">
+        </div>
+        <div>
+            <label>Precio kWh ($)</label>
+            <input type="number" id="precioKwh" step="0.01" value="0.15">
+        </div>
+    </div>
+
+    <div class="input-grid">
+        <div>
+            <label>Potencia Panel (W)</label>
+            <input type="number" id="potencia" value="450" oninput="sugerirPaneles()">
+        </div>
+        <div>
+            <label>Horas Sol (HSP)</label>
+            <input type="number" id="hsp" step="0.1" value="5.0" oninput="sugerirPaneles()">
+        </div>
+    </div>
+
+    <div class="panel-input-section">
+        <label style="color: #1e3c72;">Número de Paneles (Ajustable)</label>
+        <input type="number" id="numPanelesManual" value="6" style="border: 2px solid #1e3c72; font-weight: bold;">
+        <p class="info-text">💡 Hemos calculado esto según tu consumo, pero puedes cambiarlo.</p>
+    </div>
+
+    <label>Costo estimado Sistema ($)</label>
+    <input type="number" id="costoSistema" value="3500" style="margin-bottom: 15px;">
+
+    <button onclick="calcularImpacto()">Calcular Ahorro y ROI</button>
+
+    <div id="resultado"></div>
+</div>
+
+<script>
+    // Función que sugiere el número de paneles apenas el usuario escribe su consumo
+    function sugerirPaneles() {
+        const kWhMes = parseFloat(document.getElementById('consumo').value) || 0;
+        const wattsPanel = parseFloat(document.getElementById('potencia').value) || 450;
+        const hsp = parseFloat(document.getElementById('hsp').value) || 5;
+        const eficiencia = 0.80;
+
+        if (kWhMes > 0) {
+            const consumoDiario = kWhMes / 30;
+            const sugerencia = Math.ceil((consumoDiario * 1000) / (wattsPanel * hsp * eficiencia));
+            document.getElementById('numPanelesManual').value = sugerencia;
+        }
+    }
+
+    // Función final para calcular el ahorro basado en el número de paneles (sugerido o manual)
+    function calcularImpacto() {
+        const consumoObjetivo = parseFloat(document.getElementById('consumo').value);
+        const precioKwh = parseFloat(document.getElementById('precioKwh').value);
+        const wattsPanel = parseFloat(document.getElementById('potencia').value);
+        const hsp = parseFloat(document.getElementById('hsp').value);
+        const numPaneles = parseInt(document.getElementById('numPanelesManual').value);
+        const costoTotal = parseFloat(document.getElementById('costoSistema').value);
+        const eficiencia = 0.80;
+
+        // Energía generada por el número de paneles actual
+        const generacionMensualKwh = (wattsPanel * hsp * eficiencia * 30 * numPaneles) / 1000;
+        
+        // El ahorro real no puede exceder el consumo actual
+        const ahorroKwhEfectivo = Math.min(generacionMensualKwh, consumoObjetivo);
+        const ahorroMensual = ahorroKwhEfectivo * precioKwh;
+        const ahorroAnual = ahorroMensual * 12;
+        const cobertura = (generacionMensualKwh / consumoObjetivo) * 100;
+        const roiAnios = ahorroAnual > 0 ? (costoTotal / ahorroAnual) : 0;
+
+        const resDiv = document.getElementById('resultado');
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = `
+            <p>Generación con ${numPaneles} paneles: <span class="destaque">${generacionMensualKwh.toFixed(1)} kWh/mes</span></p>
+            <p>Cobertura: <strong>${cobertura.toFixed(0)}% de tu recibo</strong></p>
+            <p>Ahorro Mensual: <span class="destaque">$${ahorroMensual.toFixed(2)}</span></p>
+            <hr>
+            <p>Recuperación de inversión:</p>
+            <p class="destaque" style="font-size: 1.5rem; color: #1e3c72;">${roiAnios > 0 ? roiAnios.toFixed(1) : '---'} años</p>
+        `;
+    }
+
+    // Ejecutar sugerencia inicial al cargar
+    window.onload = sugerirPaneles;
+</script>
+
+</body>
+</html>
